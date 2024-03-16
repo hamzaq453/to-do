@@ -58,18 +58,18 @@ export default function Home() {
               placeholder="Add new task"
               value={inputValue}
               onChange={handleInputChange}
-              className="border border-gray-300 text-black font-semibold text-xl rounded-lg px-4 py-2 w-full mr-2"
+              className="border border-gray-300 text-black font-normal text-xl rounded-lg px-4 py-2 w-full mr-2"
             />
             <button onClick={addTask} className="bg-blue-500 hover:bg-blue-600 text-white font-semibold px-4 py-2 rounded-lg">
               Add
             </button>
           </div>
-          <ul className="divide-y text-black font-semibold text-2xl divide-gray-300">
+          <ul className="divide-y text-black font-normal font-mono text-2xl divide-gray-300">
             {tasks.map((task, index) => (
               <li
                 key={index}
                 onClick={() => handleTaskClick(index)}
-                className={`flex items-center justify-between py-2 cursor-pointer ${task.includes('✅') ? 'line-through text-gray-500' : ''}`}
+                className={`flex items-center p-4 justify-between py-2 cursor-pointer ${task.includes('✅') ? 'line-through text-gray-500' : ''}`}
               >
                 <span>{task}</span>
                 <span className="w-6 h-6 rounded-full border border-gray-400 flex items-center justify-center">
