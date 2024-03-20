@@ -1,50 +1,66 @@
-'use client'
-
 import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+
+interface Task {
+  id: number;
+  content: string;
+}
+
+const API_BASE_URL = 'https://todo-fastapi-neon.vercel.app';
 
 export default function Home() {
   const [inputValue, setInputValue] = useState('');
-  const [tasks, setTasks] = useState<string[]>([]);
+  const [tasks, setTasks] = useState<Task[]>([]);
 
   useEffect(() => {
-    try {
-      const storedTasks = localStorage.getItem('tasks');
-      if (storedTasks) {
-        setTasks(JSON.parse(storedTasks));
-      }
-    } catch (error) {
-      console.error('Error parsing tasks from Local Storage:', error);
-    }
+    fetchTasks();
   }, []);
 
-  useEffect(() => {
-    localStorage.setItem('tasks', JSON.stringify(tasks));
-  }, [tasks]);
+  const fetchTasks = async () => {
+    try {
+      const response = await axios.get<Task[]>(`${API_BASE_URL}/todos/`);
+      setTasks(response.data);
+    } catch (error) {
+      console.error('Error fetching tasks:', error);
+    }
+  };
 
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setInputValue(event.target.value);
   };
 
-  const addTask = () => {
+  const addTask = async () => {
     if (inputValue === '') {
       alert("You must write something");
     } else {
-      setTasks([...tasks, inputValue]);
-      setInputValue('');
+      try {
+        const response = await axios.post<Task>(`${API_BASE_URL}/todos/`, { content: inputValue });
+        setTasks([...tasks, response.data]);
+        setInputValue('');
+      } catch (error) {
+        console.error('Error adding task:', error);
+      }
     }
   };
 
-  const handleTaskClick = (index: number) => {
-    setTasks((prevTasks) => {
-      const updatedTasks = [...prevTasks];
-      const currentTask = updatedTasks[index];
-      updatedTasks[index] = currentTask.includes('✅') ? currentTask.replace('✅ ', '') : `✅ ${currentTask}`;
-      return updatedTasks;
-    });
+  const handleTaskClick = async (index: number) => {
+    const updatedTasks = [...tasks];
+    updatedTasks[index].content = `✅ ${updatedTasks[index].content}`;
+    setTasks(updatedTasks);
+    try {
+      await axios.put<Task>(`${API_BASE_URL}/todos/${updatedTasks[index].id}`, updatedTasks[index]);
+    } catch (error) {
+      console.error('Error updating task:', error);
+    }
   };
 
-  const handleClearAll = () => {
-    setTasks([]);
+  const handleClearAll = async () => {
+    try {
+      await axios.delete(`${API_BASE_URL}/todos/`);
+      setTasks([]);
+    } catch (error) {
+      console.error('Error clearing tasks:', error);
+    }
   };
 
   return (
@@ -67,13 +83,13 @@ export default function Home() {
           <ul className="divide-y text-black font-normal font-mono text-2xl divide-gray-300">
             {tasks.map((task, index) => (
               <li
-                key={index}
+                key={task.id}
                 onClick={() => handleTaskClick(index)}
-                className={`flex items-center p-4 justify-between py-2 cursor-pointer ${task.includes('✅') ? 'line-through text-gray-500' : ''}`}
+                className={`flex items-center p-4 justify-between py-2 cursor-pointer ${task.content.includes('✅') ? 'line-through text-gray-500' : ''}`}
               >
-                <span>{task}</span>
+                <span>{task.content}</span>
                 <span className="w-6 h-6 rounded-full border border-gray-400 flex items-center justify-center">
-                  {task.includes('✅') ? '✅' : ''}
+                  {task.content.includes('✅') ? '✅' : ''}
                 </span>
               </li>
             ))}
