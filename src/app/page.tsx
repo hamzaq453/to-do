@@ -7,30 +7,40 @@ export default function Home() {
   const [tasks, setTasks] = useState<string[]>([]);
 
   useEffect(() => {
-    try {
-      const storedTasks = localStorage.getItem('tasks');
-      if (storedTasks) {
-        setTasks(JSON.parse(storedTasks));
+    const fetchTasks = async () => {
+      try {
+        const response = await fetch(`${process.env.API_URL}/todos/`);
+        const data = await response.json();
+        setTasks(data);
+      } catch (error) {
+        console.error('Error fetching todos:', error);
       }
-    } catch (error) {
-      console.error('Error parsing tasks from Local Storage:', error);
-    }
-  }, []);
+    };
 
-  useEffect(() => {
-    localStorage.setItem('tasks', JSON.stringify(tasks));
-  }, [tasks]);
+    fetchTasks();
+  }, []);
 
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setInputValue(event.target.value);
   };
 
-  const addTask = () => {
+  const addTask = async () => {
     if (inputValue === '') {
       alert("You must write something");
     } else {
-      setTasks([...tasks, inputValue]);
-      setInputValue('');
+      try {
+        const response = await fetch(`${process.env.API_URL}/todos/`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ content: inputValue }),
+        });
+
+        const newTask = await response.json();
+        setTasks([...tasks, newTask]);
+        setInputValue('');
+      } catch (error) {
+        console.error('Error adding task:', error);
+      }
     }
   };
 
@@ -88,3 +98,4 @@ export default function Home() {
     </main>
   );
 }
+
